@@ -1,0 +1,107 @@
+@inject NavigationManager Navigation
+
+<PageTitle>New Salary Advance Request</PageTitle>
+
+<h3>Submit Salary Advance Request</h3>
+
+@if (showSuccess)
+{
+    <div class="alert alert-success" role="alert">
+        <strong>Success!</strong> Your salary advance request has been submitted successfully.
+        <a class="btn btn-info btn-sm ms-2" href="">New Request</a>
+        <a class="btn btn-light btn-sm ms-2" href="request-history">Request History</a>
+    </div>
+}
+
+<EditForm Model="@requestModel" OnValidSubmit="HandleValidSubmit" FormName="salaryAdvanceForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row mb-3">
+        <div class="form-group col-lg">
+            <label for="staffName" class="form-label">Staff Name:</label>
+            <InputText id="staffName" @bind-Value="requestModel.StaffName" class="form-control" disabled="@showSuccess" />
+            <ValidationMessage For="@(() => requestModel.StaffName)" />
+        </div>
+        <div class="form-group col-lg">
+            <label for="staffID" class="form-label">Staff ID:</label>
+            <InputText id="staffID" @bind-Value="requestModel.StaffID" class="form-control" disabled="@showSuccess" />
+            <ValidationMessage For="@(() => requestModel.StaffID)" />
+        </div>
+        <div class="form-group col-lg">
+            <label for="amount" class="form-label">Amount Requested:</label>
+            <div class="input-group">
+                <span class="input-group-text">GHS</span>
+                <InputNumber id="amount" @bind-Value="requestModel.Amount" class="form-control" disabled="@showSuccess" />
+            </div>
+            <ValidationMessage For="@(() => requestModel.Amount)" />
+        </div>
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="reason" class="form-label">Reason:</label>
+        <InputTextArea id="reason" @bind-Value="requestModel.Reason" class="form-control" rows="3" disabled="@showSuccess" />
+        <ValidationMessage For="@(() => requestModel.Reason)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="requestDate" class="form-label">Request Date:</label>
+        <InputDate id="requestDate" @bind-Value="requestModel.RequestDate" class="form-control" disabled="@showSuccess" />
+        <ValidationMessage For="@(() => requestModel.RequestDate)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary" disabled="@showSuccess">Submit Request</button>
+</EditForm>
+
+@code {
+    [SupplyParameterFromForm]
+    private SalaryAdvanceRequest requestModel { get; set; } = new();
+    
+    private bool showSuccess = false;
+
+    private void ResetForm()
+    {
+        showSuccess = false;
+        requestModel = new SalaryAdvanceRequest();
+        StateHasChanged();
+    }
+
+    private void HandleValidSubmit()
+    {
+        // Log all form values to console
+        Console.WriteLine("=== Salary Advance Request Submitted ===");
+        Console.WriteLine($"Staff Name: {requestModel.StaffName}");
+        Console.WriteLine($"Staff ID: {requestModel.StaffID}");
+        Console.WriteLine($"Amount: GHS {requestModel.Amount:F2}");
+        Console.WriteLine($"Reason: {requestModel.Reason}");
+        Console.WriteLine($"Request Date: {requestModel.RequestDate:yyyy-MM-dd}");
+        Console.WriteLine("=======================================");
+
+
+        // Show success message
+        showSuccess = true;
+
+        // Force re-render to show success message
+        StateHasChanged();
+    }
+
+    public class SalaryAdvanceRequest
+    {
+        [Required(ErrorMessage = "Staff Name is required")]
+        public string StaffName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Staff ID is required")]
+        public string StaffID { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Amount is required")]
+        [Range(1, double.MaxValue, ErrorMessage = "Amount must be greater than 0")]
+        public decimal Amount { get; set; }
+
+        [Required(ErrorMessage = "Reason is required")]
+        [StringLength(500, ErrorMessage = "Reason cannot exceed 500 characters")]
+        public string Reason { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Request date is required")]
+        public DateTime RequestDate { get; set; } = DateTime.Today;
+    }
+}

@@ -1,0 +1,93 @@
+﻿@page "/request-history"
+@attribute [StreamRendering]
+
+<PageTitle>Request History</PageTitle>
+
+<h1>Salary Advance Request History</h1>
+
+<p>View all submitted salary advance requests.</p>
+
+@if (requests == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Staff Name</th>
+                <th>Staff ID</th>
+                <th>Amount Requested</th>
+                <th>Reason</th>
+                <th>Request Date</th>
+                <th>Status</th>
+                <th>Approved Date</th>
+                <th>Approved By</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var request in requests)
+            {
+                <tr>
+                    <td>@request.StaffName</td>
+                    <td>@request.StaffId</td>
+                    <td>GHS @request.Amount.ToString("N2")</td>
+                    <td>@request.Reason</td>
+                    <td>@request.RequestDate.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        <span class="badge @(request.Status == "Approved" ? "bg-success" : request.Status == "Pending" ? "bg-warning" : "bg-danger")">
+                            @request.Status
+                        </span>
+                    </td>
+                    <td>@(request.ApprovedDate?.ToString("yyyy-MM-dd") ?? "N/A")</td>
+                    <td>@(request.ApprovedBy ?? "N/A")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private SalaryAdvanceRequest[]? requests;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Simulate asynchronous loading to demonstrate streaming rendering
+        await Task.Delay(500);
+
+        var staffNames = new[] { "John Doe", "Jane Smith", "Michael Johnson", "Sarah Williams", "David Brown", "Emma Davis", "Robert Wilson", "Lisa Garcia", "James Miller", "Maria Rodriguez" };
+        var reasons = new[] { "Medical Emergency", "Home Renovation", "Education Fees", "Vehicle Repair", "Family Support", "Business Investment", "Debt Consolidation", "Vacation", "Wedding Expenses", "Unexpected Bills" };
+        var statuses = new[] { "Approved", "Pending", "Rejected", "Approved", "Pending", "Approved", "Pending", "Rejected", "Approved", "Pending" };
+        var approvers = new[] { "Alice Johnson", "Bob Thompson", "Carol Davis", "David Wilson", "Emma Brown", "Frank Miller", "Grace Lee", "Henry Garcia" };
+
+        requests = Enumerable.Range(1, 10).Select(index => new SalaryAdvanceRequest
+        {
+            StaffName = staffNames[Random.Shared.Next(staffNames.Length)],
+            StaffId = $"EMP{1000 + index:D3}",
+            Amount = Random.Shared.Next(500, 5001),
+            Reason = reasons[Random.Shared.Next(reasons.Length)],
+            RequestDate = DateTime.Now.AddDays(-Random.Shared.Next(1, 31)),
+            Status = statuses[Random.Shared.Next(statuses.Length)]
+        }).ToArray();
+
+        // Set approved date and approver for approved requests
+        foreach (var request in requests.Where(r => r.Status == "Approved"))
+        {
+            request.ApprovedDate = request.RequestDate.AddDays(Random.Shared.Next(1, 8));
+            request.ApprovedBy = approvers[Random.Shared.Next(approvers.Length)];
+        }
+    }
+
+    private class SalaryAdvanceRequest
+    {
+        public string StaffName { get; set; } = string.Empty;
+        public string StaffId { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public string Reason { get; set; } = string.Empty;
+        public DateTime RequestDate { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public DateTime? ApprovedDate { get; set; }
+        public string? ApprovedBy { get; set; }
+    }
+}
