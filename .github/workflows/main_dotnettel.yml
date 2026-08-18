@@ -8,7 +8,6 @@ on:
   workflow_dispatch:
 
 jobs:
-
   build:
     runs-on: windows-latest
 
@@ -39,7 +38,8 @@ jobs:
           name: asp-app
           path: ./published
 
-  deploy:
+  deploy-uat:
+    if: github.ref == 'refs/heads/develop'
     runs-on: windows-latest
     needs: build
 
@@ -48,7 +48,7 @@ jobs:
       contents: read
 
     environment:
-      name: ${{ github.ref == 'refs/heads/main' && 'prod' || 'uat' }}
+      name: uat
 
     steps:
       - name: Download artifact
@@ -64,8 +64,40 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy to Azure Web App
+      - name: Deploy to UAT Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ github.ref == 'refs/heads/main' && 'dotnet-prod' || 'dotnet-uat' }}
+          app-name: dotnet-uat
+          package: ./published
+
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    needs: build
+
+    permissions:
+      id-token: write
+      contents: read
+
+    environment:
+      name: prod
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: asp-app
+          path: ./published
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Production Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: dotnet-prod
           package: ./published
