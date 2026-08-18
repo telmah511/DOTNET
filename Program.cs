@@ -3,6 +3,7 @@ using Salary_advance.Components;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+// hello 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
