@@ -3,11 +3,12 @@ name: Build and Deploy .NET 8 App
 on:
   push:
     branches:
-      - main
       - develop
+      - main
   workflow_dispatch:
 
 jobs:
+
   build:
     runs-on: windows-latest
 
@@ -26,18 +27,17 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Build
+      - name: Build application
         run: dotnet build --configuration Release --no-restore
 
-      - name: Publish
+      - name: Publish application
         run: dotnet publish --configuration Release --no-build --output ./published
 
-      - name: Upload artifact for deployment
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ASP-app
+          name: asp-app
           path: ./published
-
 
   deploy:
     runs-on: windows-latest
@@ -48,16 +48,16 @@ jobs:
       contents: read
 
     environment:
-      name: ${{ github.ref == 'refs/heads/main' && 'Prod' || 'UAT' }}
+      name: ${{ github.ref == 'refs/heads/main' && 'prod' || 'uat' }}
 
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: ASP-app
+          name: asp-app
           path: ./published
 
-      - name: Login to Azure
+      - name: Azure Login
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -65,8 +65,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy to Azure Web App
-        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ github.ref == 'refs/heads/main' && 'dotnettel' || 'dotnet-uat' }}
+          app-name: ${{ github.ref == 'refs/heads/main' && 'dotnet-prod' || 'dotnet-uat' }}
           package: ./published
