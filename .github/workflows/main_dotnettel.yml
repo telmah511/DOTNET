@@ -1,14 +1,16 @@
-name: Build and deploy ASP app to Azure Web App - dotnettel
+name: Build and Deploy .NET 8 App
 
 on:
   push:
     branches:
       - main
+      - develop
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
+
     permissions:
       contents: read
 
@@ -36,6 +38,7 @@ jobs:
           name: ASP-app
           path: ./published
 
+
   deploy:
     runs-on: windows-latest
     needs: build
@@ -43,6 +46,9 @@ jobs:
     permissions:
       id-token: write
       contents: read
+
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'Prod' || 'UAT' }}
 
     steps:
       - name: Download artifact
@@ -54,14 +60,13 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_31C2136427F64E7881470029A84F4B37 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_036339139EDB49E5B2C04A8FDFA3F933 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_39B1E49127A2482A9BFDDD58E2CFC9CA }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'dotnettel'
-          slot-name: 'Production'
+          app-name: ${{ github.ref == 'refs/heads/main' && 'dotnettel' || 'dotnet-uat' }}
           package: ./published
