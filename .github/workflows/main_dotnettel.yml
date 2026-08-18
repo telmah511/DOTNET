@@ -3,7 +3,7 @@ name: Build and Deploy .NET 8 App
 on:
   push:
     branches:
-      - develop
+      - uat
       - main
   workflow_dispatch:
 
@@ -39,7 +39,7 @@ jobs:
           path: ./published
 
   deploy-uat:
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/uat'
     runs-on: windows-latest
     needs: build
 
