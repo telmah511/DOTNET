@@ -3,11 +3,14 @@ name: Build and Deploy .NET 8 App
 on:
   push:
     branches:
-      - uat
       - main
   workflow_dispatch:
 
 jobs:
+
+  # =====================
+  # BUILD
+  # =====================
   build:
     runs-on: windows-latest
 
@@ -29,6 +32,9 @@ jobs:
       - name: Build application
         run: dotnet build --configuration Release --no-restore
 
+      - name: Run tests
+        run: dotnet test --configuration Release --no-build
+
       - name: Publish application
         run: dotnet publish --configuration Release --no-build --output ./published
 
@@ -38,8 +44,11 @@ jobs:
           name: asp-app
           path: ./published
 
+
+  # =====================
+  # UAT
+  # =====================
   deploy-uat:
-    if: github.ref == 'refs/heads/uat'
     runs-on: windows-latest
     needs: build
 
@@ -70,10 +79,13 @@ jobs:
           app-name: dotnet-uat
           package: ./published
 
+
+  # =====================
+  # PRODUCTION
+  # =====================
   deploy-prod:
-    if: github.ref == 'refs/heads/main'
     runs-on: windows-latest
-    needs: build
+    needs: deploy-uat
 
     permissions:
       id-token: write
